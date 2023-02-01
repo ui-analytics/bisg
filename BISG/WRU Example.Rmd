@@ -1,0 +1,270 @@
+---
+title: "Using the WRU Package to Estimate Individual-level Race"
+subtitile: "Comparing Estimates to the NC Voter File"
+author: "Eric Moore"
+date: "`r Sys.Date()`"
+
+output: 
+  html_document:
+      toc: false
+      theme: lumen
+      highlight: textmate
+---
+
+```{r setup, include=FALSE}
+rm(list=ls()) # clears the environment of all objects
+knitr::opts_chunk$set(echo = TRUE)
+
+# Required Libraries
+library(tidyverse)
+library(stringr)
+library(readr)
+library(reader)
+library(readxl)
+library(tidyr)
+library(data.table)
+library(wru)
+```
+
+## Importing and Shaping the Data
+
+The first step in the process is to bring in the officially voter file for registered voters in North Carolina. Precincts that are either missing or blank are dropped while a number of variables are either recoded or renamed (as seen in the code below) in a way that meets the requirements for the matching required through the WRU package. Interested parties should [download the pdf here](https://cran.r-project.org/web/packages/wru/wru.pdf).
+
+```{r, eval=TRUE}
+#{r, eval=TRUE, results='hide'} # use this second line instead if actually running the code
+# Need to bring in the full dataset
+Undeclared <- fread("~/Dropbox (UNC Charlotte)/MPSA_2023/Updated Folder/Data/ncvoter_Statewide.txt", 
+               select=c("ncid", "county_desc", "precinct_abbrv", "precinct_desc" ,"last_name", "first_name", "middle_name", "voter_status_desc", "race_code", "ethnic_code", "gender_code", "party_cd"))
+# And because the county ids are not correct, lets bring back the previous county csv file
+NCcounty <- fread("~/Dropbox (UNC Charlotte)/MPSA_2023/Updated Folder/Data/Shapefiles/NCDOT_County_Boundaries.csv", 
+                  select=c( "UpperCountyName", "FIPS"))
+NCcounty$FIPS <- str_pad(NCcounty$FIPS, 3, pad = "0")
+Undeclared <- Undeclared %>% left_join(NCcounty, by = c( "county_desc" = "UpperCountyName") )
+rm(NCcounty)
+gc()
+
+# Coding choices are made in accordance with the instructions for the wru package
+Undeclared <- Undeclared %>% filter(!( is.na(Undeclared$precinct_desc ) | Undeclared$precinct_desc=="" ) ) %>% 
+  mutate(surname = last_name, state = "NC",
+         ncpct_id = as.character(precinct_abbrv),
+         sex = ifelse(gender_code %in% "F", 1, 0 ),
+         PID = ifelse(party_cd %in% "DEM", 1,
+                      ifelse(party_cd %in% "REP", 2, 0)),         
+         nc_re = ifelse(race_code %in% "W" & ethnic_code %ni% "HL", "W",
+                   ifelse(race_code %in% "B" & ethnic_code %ni% "HL", "B",
+                   ifelse(ethnic_code %in% "HL", "HL",
+                   ifelse(race_code %in% "A" & ethnic_code %ni% "HL", "A",
+                   ifelse(race_code %ni% c("W", "B", "A") & ethnic_code %ni% "HL", "O", "M"))))) )  %>% 
+  dplyr::select(state, county = FIPS, ncpct_id, ncid, surname, last_name, first = first_name, middle = middle_name, nc_re, race_code, ethnic_code)  %>% 
+  distinct(ncid, .keep_all = TRUE)
+
+Undeclared.add <- Undeclared %>% filter(race_code %ni% c("U", " ") & ethnic_code %ni% "UN") %>% 
+  dplyr::select(-c(nc_re, race_code, ethnic_code)) 
+gc()
+```
+
+We finally need to acquire the census data, which can be derived from the decennial census from 2000, 2010, or 2020. We also specify the state (here NC), the year (2020), and the geography of interest (I am using counties as this is the default for the program). 
+
+```{r, eval=TRUE}
+# Bringing in the Census Data
+ncCensusData <- get_census_data(key = "020934bc9b3faa8c9f629492650c8eb446349f2d", 
+                                states = "NC", year = "2020", census.geo = "county") 
+```
+
+## First Step: Only including Surname
+
+### Obtaining Probabilies for Individual-level Race/Ethnicity
+
+WRU provides researchers the ability to predict the race/ethnicity of an individual using a variety of options. For this first part, I have included the code for estimating these variables using only the surname of the individual. The resulting variables provide the probability that an individual is one of five racial/ethnic categories.
+```{r, eval=FALSE}
+#{r, eval=TRUE, results='hide', warning=FALSE}
+Undeclared.add <- predict_race(voter.file = Undeclared.add, 
+                               surname.year = 2020,
+                               census.geo = "county", 
+                               census.data = ncCensusData,
+                               year = "2020",
+                               model = "BISG",
+                               names.to.use = "surname") 
+```
+
+As an additional step, I have included the following code to ascertain the "most likely" race/ethnicity for the individual. This will then apply a specific race/ethnicity to an individual based on the probabilities that were predicted above.
+```{r, eval=FALSE}
+#{r, eval=TRUE, results='hide'}
+## Determining the predicted race/ethnicity
+Undeclared.add <- Undeclared.add %>% 
+  mutate(predict_race = colnames(Undeclared.add %>% 
+                        dplyr::select(pred.whi:pred.oth) )[max.col(Undeclared.add %>% 
+                        dplyr::select(pred.whi:pred.oth), ties.method = "random")],
+          prace_new = recode(predict_race, 
+                      "pred.whi" = "W",
+                      "pred.bla" = "B",
+                      "pred.his" = "HL",
+                      "pred.asi" = "A",
+                      "pred.oth" = "O")) %>%
+  dplyr::select(ncid, prace_new)
+
+gc()
+```
+
+### Matching the new Race/Ethnicity with Self-Identified Data
+
+Let us now check the accuracy of these baysien estimates with the self-identified race/ethnic data provided in the NC voter file. After merging the new test file with the original Mecklenburg voter file, I then created a new variable to determine whether the predicted race matched the self-identified one. It should be noted that I did not include "Other" for this analysis, though researchers should moving forward.  
+
+```{r, eval=FALSE}
+## Merging this with the original dataset
+Undeclared <- Undeclared %>% filter(race_code %ni% c("U", " ") & ethnic_code %ni% "UN") %>%
+  left_join(Undeclared.add, by = "ncid" )
+
+Undeclared <-  Undeclared %>% filter(nc_re %ni% "M") %>% 
+  mutate(Race_sur = ifelse(nc_re %in% "W" & prace_new %in% "W", 1, 
+                    ifelse(nc_re %in% "B" & prace_new %in% "B", 1, 
+                    ifelse(nc_re %in% "A" & prace_new %in% "A", 1,
+                    ifelse(nc_re %in% "O" & prace_new %in% "O", 1,
+                    ifelse(nc_re %in% "HL" & prace_new %in% "HL", 1, 0)))))) %>% 
+  dplyr::select(-c(prace_new)) 
+
+rm(Undeclared.add)
+gc()
+
+
+check <- table(Undeclared$Race_sur) 
+check / sum(check) 
+rm(check)
+```
+
+## Next Steps: Only First and Middle Names
+
+The next step is to bring in additional name categories, specifically using the first and middle name dictionaries to see if the accuracy of the estimator can be improved. The code includes the Census key researchs can request in order to use the Census API, the state of interest, and the geography of interest.  
+```{r, eval=FALSE}
+# Step 2: Adding First Names
+
+## Creating the dataset again
+Undeclared.add <- Undeclared %>% filter(race_code %ni% c("U", " ") & ethnic_code %ni% "UN") %>% 
+  dplyr::select(-c(nc_re, race_code, ethnic_code)) 
+gc()
+## Now predicting race using surname and first names
+Undeclared.add <- predict_race(voter.file = Undeclared.add, 
+                               surname.year = 2020,
+                               census.geo = "county", 
+                               census.data = ncCensusData,
+                               year = "2020",
+                               model = "BISG",
+                               names.to.use = "surname, first") 
+## Determining the predicted race/ethnicity
+Undeclared.add <- Undeclared.add %>% 
+  mutate(predict_race = colnames(Undeclared.add %>% 
+                        dplyr::select(pred.whi:pred.oth) )[max.col(Undeclared.add %>% 
+                        dplyr::select(pred.whi:pred.oth), ties.method = "random")],
+          prace_new = recode(predict_race, 
+                      "pred.whi" = "W",
+                      "pred.bla" = "B",
+                      "pred.his" = "HL",
+                      "pred.asi" = "A",
+                      "pred.oth" = "O")) %>%
+  dplyr::select(ncid, prace_new)
+
+gc()
+## Merging this with the original dataset
+Undeclared <- Undeclared %>% filter(race_code %ni% c("U", " ") & ethnic_code %ni% "UN") %>%
+  left_join(Undeclared.add, by = "ncid" )
+
+Undeclared <-  Undeclared %>% filter(nc_re %ni% "M") %>% 
+  mutate(Race_sfirst = ifelse(nc_re %in% "W" & prace_new %in% "W", 1, 
+                    ifelse(nc_re %in% "B" & prace_new %in% "B", 1, 
+                    ifelse(nc_re %in% "A" & prace_new %in% "A", 1,
+                    ifelse(nc_re %in% "O" & prace_new %in% "O", 1,
+                    ifelse(nc_re %in% "HL" & prace_new %in% "HL", 1, 0))))))  %>% 
+  dplyr::select(-c(prace_new)) 
+
+rm(Undeclared.add)
+gc()
+
+
+check <- table(Undeclared$Race_sfirst) 
+check / sum(check) 
+rm(check)
+```
+
+```{r, eval=FALSE}
+# Final Step: Including Middle Names
+
+## One final time creating the dataset of use
+Undeclared.add <- Undeclared %>% filter(race_code %ni% c("U", " ") & ethnic_code %ni% "UN") %>% 
+  dplyr::select(-c(nc_re, race_code, ethnic_code)) 
+gc()
+## Running the predict race function
+Undeclared.add <- predict_race(voter.file = Undeclared.add, 
+                               surname.year = 2020,
+                               census.geo = "county", 
+                               census.data = ncCensusData,
+                               year = "2020",
+                               model = "BISG",
+                               names.to.use = "surname, first, middle") 
+## Looking at what the addition looks like
+Undeclared.add %>% dplyr::select(state:first, pred.whi:pred.oth) %>%
+  mutate(across(c(pred.whi:pred.oth), round, 3))  %>%
+  slice_sample(n = 10)
+## Determining the predicted race/ethnicity
+Undeclared.add <- Undeclared.add %>% 
+  mutate(predict_race = colnames(Undeclared.add %>% 
+                        dplyr::select(pred.whi:pred.oth) )[max.col(Undeclared.add %>% 
+                        dplyr::select(pred.whi:pred.oth), ties.method = "random")],
+          prace_new = recode(predict_race, 
+                      "pred.whi" = "W",
+                      "pred.bla" = "B",
+                      "pred.his" = "HL",
+                      "pred.asi" = "A",
+                      "pred.oth" = "O")) %>%
+  dplyr::select(ncid, prace_new)
+rm(ncCensusData)
+gc()
+## Merging this with the original dataset
+Undeclared <- Undeclared %>% filter(race_code %ni% c("U", " ") & ethnic_code %ni% "UN") %>%
+  left_join(Undeclared.add, by = "ncid" )
+
+Undeclared <-  Undeclared %>% filter(nc_re %ni% "M") %>% 
+  mutate(Race_sfm = ifelse(nc_re %in% "W" & prace_new %in% "W", 1, 
+                    ifelse(nc_re %in% "B" & prace_new %in% "B", 1, 
+                    ifelse(nc_re %in% "A" & prace_new %in% "A", 1,
+                    ifelse(nc_re %in% "O" & prace_new %in% "O", 1,
+                    ifelse(nc_re %in% "HL" & prace_new %in% "HL", 1, 0)))))) 
+rm(Undeclared.add)
+gc()
+
+
+check <- table(Undeclared$Race_sfm)
+check / sum(check) 
+rm(check)
+```
+
+# At first glance we can see how the predictive power of the algorithm increases as we provide it with more information. Using just the surnames, we have an accuracy of approximately 76%, which increases to 87% when using all three names. It is, however, important to look at how this varies by group.
+
+## Validating BISG Predictions
+```{r, eval=FALSE}
+Undeclared %>% group_by(state, nc_re) %>%
+  summarise(Correct=sum(Race_sur, na.rm = T)) %>% 
+  ungroup() %>% 
+  left_join(Undeclared %>% group_by(state, nc_re) %>%
+  summarise(Total=n()) %>% 
+  ungroup, by = c("state", "nc_re")) %>% 
+  mutate(Prop = (Correct/Total) * 100,
+         Diff = Prop - 75.9) %>% dplyr::select(state, nc_re, Prop, Diff) %>% 
+    left_join(Undeclared %>% group_by(state, nc_re) %>%
+              summarise(Correct=sum(Race_sfirst, na.rm = T)) %>% 
+              ungroup, by = c("state", "nc_re")) %>% 
+              left_join(Undeclared %>% group_by(state, nc_re) %>%
+              summarise(Total=n()) %>% 
+              ungroup, by = c("state", "nc_re")) %>% 
+              mutate(Prop1 = (Correct/Total) * 100,
+              Diff1 = Prop1 - 83) %>% dplyr::select(-c(Correct, Total)) %>% 
+    left_join(Undeclared %>% group_by(state, nc_re) %>%
+              summarise(Correct=sum(Race_sfm, na.rm = T)) %>% 
+              ungroup, by = c("state", "nc_re")) %>% 
+              left_join(Undeclared %>% group_by(state, nc_re) %>%
+              summarise(Total=n()) %>% 
+              ungroup, by = c("state", "nc_re")) %>% 
+              mutate(Prop2 = (Correct/Total) * 100,
+              Diff2 = Prop2 - 87) %>% dplyr::select(-c(Correct, Total))
+```
+
+
