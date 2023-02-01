@@ -24,7 +24,7 @@ library(tigris)
 library(viridis)
 
 # API Key Setup
-Sys.setenv(CENSUS_KEY="020934bc9b3faa8c9f629492650c8eb446349f2d")
+#Sys.setenv(CENSUS_KEY="") # This will be the API key that is requested from the Census' website
 ```
 
 ## Acquiring Census Data
@@ -38,7 +38,7 @@ datasets <- listCensusApis()
 geo <- listCensusMetadata(name = "acs/acs5", vintage = 2021, type = "geographies")
 vars <- listCensusMetadata(name = "acs/acs5", vintage = 2021, type = "variables")
 
-NCblkgroup <- getCensus(name = "acs/acs5", vintage = 2021, 
+NCblkgroup <- getCensus(name = "acs/acs5", vintage = 2021,  key = Sys.getenv("CENSUS_API_KEY"),
                    vars = c("B03002_001E", #Total Pop
                             "B03002_003E", "B03002_004E", "B03002_012E", #White, Black, Hispanic
                             "B03002_005E", "B03002_006E", "B03002_007E", "B03002_008E"), #Alaska Native, Asian, Hawaiian, Other

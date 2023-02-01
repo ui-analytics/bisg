@@ -67,7 +67,7 @@ We finally need to acquire the census data, which can be derived from the decenn
 
 ```{r, eval=TRUE}
 # Bringing in the Census Data
-ncCensusData <- get_census_data(key = "020934bc9b3faa8c9f629492650c8eb446349f2d", 
+ncCensusData <- get_census_data(key = Sys.getenv("CENSUS_API_KEY"), 
                                 states = "NC", year = "2020", census.geo = "county") 
 ```
 
