@@ -1,0 +1,91 @@
+---
+title: "On imputing Race/Ethnicity - Opportunity and implications to community research"
+author:
+- Kailas Venkitasubramanian, Charlotte Urban Institute
+- Eric Moore, Charlotte Urban Institute
+date: "2023-02-14"
+output:
+  html_document:
+    theme: journal
+  word_document: default
+  pdf_document: default
+#knit: (function(inputFile, encoding) {
+#  rmarkdown::render(inputFile, encoding = encoding, output_dir = "docs") })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+![Photo: Bakken Museum](images/photobybakkenmuseum.jpg)
+
+## Why impute race/ethnicity ?
+
+Real-world data being messy and incomplete is more of a rule than exception. Non-existent, unreliable or incomplete race/ethnicity data can be especially detrimental to insights drawn from community research and policies that are informed by this research. For example, if outcomes of a program to address health disparities among Hispanic/Latino people in Mecklenburg county was evaluated using a mix of survey or administrative data, and the self-reported race/ethnicity responses in this datasets were largely missing or of poor quality, conclusions drawn from the analysis about the success of this program can be circumspect or unusable. High quality race/ethnicity data is important to accurately represent the demographic characteristics of communities, identify and address disparities, promote and center equity and make research inclusive and sensitive to a diverse population. 
+
+Imputation is an important technique in social science research to address missing data. 
+
+
+
+Studies with unreliable or missing race/ethnicity data
+
+Augmenting Data Integration Process
+
+Reusing data for [secondary research](https://en.wikipedia.org/wiki/Secondary_research)
+
+
+
+
+## Introducing Bayesian improved surname geocoding
+
+Bayesian Improved Surname Geocoding (BISG) is a method used to impute race/ethnicity based on surname and geographic location data. BISG uses a probabilistic algorithm to estimate the race/ethnicity of an individual based on their surname and the racial/ethnic composition of the geographic area where they reside. 
+
+
+### How BISG Works
+
+(Eric)
+
+(Connect to WRU White paper and detailed technical piece)
+
+Caveats
+
+surnames are not a foolproof indicator of race/ethnicity and can be influenced by cultural and historical factors such as immigration, adoption, and intermarriage.
+
+Studies have shown that BISG can achieve high accuracy rates for some racial/ethnic groups, such as non-Hispanic whites and non-Hispanic blacks. However, accuracy rates may be lower for other groups, such as Hispanic/Latino individuals or those with multiracial backgrounds. In addition, BISG may not accurately capture the diversity and complexity within and across racial/ethnic groups.
+
+should be used in combination with other data sources and approaches, and its results should be interpreted with caution and sensitivity.
+
+## Applications of BISG
+
+(Eric)
+
+(Examples of applications and notes on impact)
+
+
+## Concerns and Practice Considerations 
+
+Privacy Policy of Client/Partner Organization
+
+Informed Consent
+
+Rare populations and Groups
+
+Choosing when to collect race data
+
+Reporting imputation and constraints
+
+Collecting name and address information
+
+Reidentification Risks
+
+## Next Steps 
+
+
+Formalizing the practice 
+
+Documentation and Resources
+
+Community and partner feedback
+
+
+
