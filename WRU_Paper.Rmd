@@ -201,3 +201,8 @@ After filtering any rows where the race is listed as "Multiracial", We then crea
 
 # Results
 
+In order to provide an accurate assessment of the BISG model, I performed three separate predictions that utilized the three different options for names: surname (last name) only, surname and first name, and surname, first, and middle name. The predictions were then compared to the self-reported race/ethnicity of the respective registrant. All of these predictions utilized Census data at the county level, though there is a possibility of utilizing lower geographical units such as the Census Tract, Block Group, or even Block if desired. The results of the various BISG predictions and their accuracy to the self-reported identity of Whites, Blacks/African Americans, Hispanic/Latinos, and Asians is reported below.
+
+![](tab1.png){width=70%}
+
+All else being equal, we see an increase of approximately 11 percent accuracy going from using surname (last names) exclusively to using the first, middle, and surname in the predictive model (76 percent predicted correctly compared to 87 percent predicted correctly, respectively). The issue, however, is that the accuracy of the model appears to be biased toward whites. In every model, whites are the only group that consistently outperform the mean accuracy of the model while Blacks/African Americans perform the worst. While this bias is reduced as we utilize more information in the prediction, and the overall accuracy of the model is something that provides promise for research, this underestimation of minority groups proposes a significant drawback, particular for community research. 

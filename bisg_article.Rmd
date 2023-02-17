@@ -43,9 +43,9 @@ Bayesian Improved Surname Geocoding (BISG) is a method used to impute race/ethni
 
 ### How BISG Works
 
-(Eric)
+This methodology combines surname analysis with geocoded data to estimate an individual’s race. Put another way, BISG calculates the conditional probability that an individual belongs to a particular racial group based on their name and geolocation using the US Census Bureau’s Surname list and demographic data at a variety of different geographic levels such as county, tracts, and blocks. Running this function provides researchers with a set of new variables that provide the probability that an individual would be considered White, Black, Hispanic, Asian, or Other.
 
-(Connect to WRU White paper and detailed technical piece)
+The process to acquire these estimates remains relatively straightforward. The first step is to load the "wru" package into the R environment and then import the dataset in which we want to impute race/ethnicity data. It should be noted that we elected to use the statewide version of the North Carolina voter file so we could validate the accuracy of the race/ethnic predictions of the BISG model (interested readers can refer to the [white paper](link here) for a detailed walk through on this process). Once the Census data has been acquired, the only other command is to run the predict_race function to generate the predicted race/ethnicity for each individual in the dataset.   
 
 Caveats
 
@@ -57,9 +57,12 @@ should be used in combination with other data sources and approaches, and its re
 
 ## Applications of BISG
 
-(Eric)
+BISG remains a relatively new technique for researchers, with Imai and Khanna (2016) publishing their approach to using Bayes rule with the Census surname list less than a decade ago. Yet, this method has been used to answer various questions, such as:
 
-(Examples of applications and notes on impact)
+* Comparing political behavior and participation
+* Understanding disparities in housing evictions
+* Estimating the risk of police use of force
+* Assessing inequalities in flood vulnerability
 
 
 ## Concerns and Practice Considerations 
