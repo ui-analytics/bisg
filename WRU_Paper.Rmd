@@ -47,7 +47,7 @@ library(wru)
 \vfill
 \textbf{Abstract}
 
-This paper provides a detailed walkthrough of how we validated the estimations of the wru package (R) with the publicly available voter file in North Carolina. After cleaning the dataset in a way to meet the standards of wru, we ran the predict race function using the most recently available 2020 data at the county level. Mutliple estimates were calculated using a combination of the first, middle, and surname dictionaries. These various predictions are then compared to illustrate how utilizing all three of these names, even at the county level, can provide an overall accuracy of 87 percent when predicting an individual's race/ethnicity. Further examination, however, reveals that this level of accuracy is not enjoyed by every type of racial/ethnic group in the dataset.
+This paper provides a detailed walkthrough of how we validated the estimations of the wru package (R) with the publicly available voter file in North Carolina. After cleaning the dataset in a way to meet the standards of wru, we ran the predict race function using the most recently available 2020 data at the county level. Multiple estimates were calculated using a combination of the first, middle, and surname dictionaries. These various predictions are then compared to illustrate how utilizing all three of these names, even at the county level, can provide an overall accuracy of 87 percent when predicting an individual's race/ethnicity. Further examination, however, reveals that this level of accuracy is not enjoyed by every type of racial/ethnic group in the dataset.
 
 \newpage
 
@@ -64,11 +64,11 @@ The following packages are required to run the analysis:
 2. data.table
 3. wru
 
-Tidyverse includes a host of different packages commonly used for data management and cleaning. This project relies on dplyr to create the dataset of interest. Data.table is a package that allows R to import large datasets more efficiently, specifically for text files, through the used of the fread command. Finally, we utilize the wru package to estimate the race/ethnicity of the various individuals within the dataset.
+Tidyverse includes a host of different packages commonly used for data management and cleaning. This project relies on dplyr to create the dataset of interest. Data.table is a package that allows R to import large datasets more efficiently, specifically for text files, through the use of the fread command. Finally, we utilize the wru package to estimate the race/ethnicity of the various individuals within the dataset.
 
 # Creating the Dataset
 
-We begin be using the fread fucntion of the data.table package to import the statewide voter file from North Carolina. Fread presents a viable alternative to other methods of importing text files due to the size of the file (approximately 5 million observations). 
+We begin using the fread function of the data.table package to import the statewide voter file from North Carolina. Fread presents a viable alternative to other methods of importing text files due to the size of the file (approximately 5 million observations). 
 ```{r eval=FALSE}
 Undeclared <- fread("~/Data/ncvoter_Statewide.txt")
 NCcounty <- fread("~/Data/Shapefiles/NCDOT_County_Boundaries.csv", 
@@ -79,7 +79,7 @@ NCcounty$FIPS <- str_pad(NCcounty$FIPS, 3, pad = "0")
 Undeclared <- Undeclared %>% left_join(NCcounty, 
               by = c( "county_desc" = "UpperCountyName") )
 ```
-After successfully bringing in this file and naming it "Undecleared", we then bring in the county-level FIPS information, which will be important for acquiring the census information later. After creating a FIPS variable that has the mandatory three spaces for the values, the final line of code merges these two files together on the county name (though they are coded differently in the respective datasets) to now have the information necessary to begin cleaning the dataset. 
+After successfully bringing in this file and naming it "Undeclared", we then bring in the county-level FIPS information, which will be important for acquiring the census information later. After creating a FIPS variable that has the mandatory three spaces for the values, the final line of code merges these two files together on the county name (though they are coded differently in the respective datasets) to now have the information necessary to begin cleaning the dataset. 
 
 This begins with the code below:
 ```{r eval=FALSE}
@@ -102,7 +102,7 @@ Undeclared <- Undeclared %>%
 ```
 As an overview, the preceding code removes any row with missing and/or empty district (precinct_desc) values, adds new demographic variables with modified values, subsets the dataset to only include specific variables, and finally removes duplicate rows based on the ncid variable (this is the individual-level identifier provided by the NCSBE). For more informative purposes, however, we go through and explain the code in segments. 
 
-The row beginning with the filter command removes any row where the precinct_desc variable possess either an NA or a empty string value. This allows us to remove any observation (registrant) who is not registered in a recognized district in North Carolina. The mutate command provides the ability to create several new variables, including:
+The row beginning with the filter command removes any row where the precinct_desc variable possesses either an NA or an empty string value. This allows us to remove any observation (registrant) who is not registered in a recognized district in North Carolina. The mutate command provides the ability to create several new variables, including:
 
 * A new surname variable with the same values as the last_name variable; in essence, this renames the variable in a way that is in line with the requirements of the wru package.
 * New geographic identifiers, including a state variable with the value "NC" and a new ncpct_id variable with the precinct_abbrv variable converted to character data type.
@@ -113,6 +113,7 @@ The row beginning with the filter command removes any row where the precinct_des
 * The nc_re variable is generated using a series of nested if-else statements based on the values of the race_code and ethnic_code variables. Importantly, we create this new variable to limit individuals to having race and ethnicity classifications that are exclusive of one another. In other words, we only include White, non-Hispanics, non-Hispanic Black/African Americans, etc. 
 
 The final task in getting the dataset in shape is to remove individuals without a classification for either race or ethnicity. While normally this would be our population of interest for imputing data, we want to eliminate these individuals for the purposes of validating our predictions later on. 
+
 ```{r eval=FALSE}
 Undeclared.add <- Undeclared %>% filter(race_code %ni% c("U", " ") & 
                                         ethnic_code %ni% "UN") %>% 
@@ -152,7 +153,7 @@ This will provide us with the following predictions:
 
 ## Translating the predictions into an individuals "race/ethnicity"
 
-While the previous command provides researchers with the predicted probability of an individuals' race/ethnicity across five categories, the question now becomes what to do with this information? Put another way, how do we take this information and assign a new predicted value of race/ethnicity? We answer this with the following code:
+While the previous command provides researchers with the predicted probability of an individual's race/ethnicity across five categories, the question now becomes what to do with this information? Put another way, how do we take this information and assign a new predicted value of race/ethnicity? We answer this with the following code:
 ```{r eval=FALSE}
 Undeclared.add <- Undeclared.add %>% 
   mutate(predict_race = colnames(Undeclared.add %>% 
@@ -205,4 +206,4 @@ In order to provide an accurate assessment of the BISG model, I performed three 
 
 ![](tab1.png){width=70%}
 
-All else being equal, we see an increase of approximately 11 percent accuracy going from using surname (last names) exclusively to using the first, middle, and surname in the predictive model (76 percent predicted correctly compared to 87 percent predicted correctly, respectively). The issue, however, is that the accuracy of the model appears to be biased toward whites. In every model, whites are the only group that consistently outperform the mean accuracy of the model while Blacks/African Americans perform the worst. While this bias is reduced as we utilize more information in the prediction, and the overall accuracy of the model is something that provides promise for research, this underestimation of minority groups proposes a significant drawback, particular for community research. 
+All else being equal, we see an increase of approximately 11 percent accuracy going from using surname (last names) exclusively to using the first, middle, and surname in the predictive model (76 percent predicted correctly compared to 87 percent predicted correctly, respectively). The issue, however, is that the accuracy of the model appears to be biased toward whites. In every model, whites are the only group that consistently outperform the mean accuracy of the model while Blacks/African Americans perform the worst. While this bias is reduced as we utilize more information in the prediction, and the overall accuracy of the model is something that provides promise for research, this underestimation of minority groups proposes a significant drawback, particularly for community research. 

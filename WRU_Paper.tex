@@ -120,7 +120,7 @@ Kailas Venkitasubramanian\footnote{Urban Institute, University of North
   Carolina at Charlotte. Email:
   \href{mailto:kvenkita@uncc.edu}{\nolinkurl{kvenkita@uncc.edu}}}}
 \date{First version: 14 February 2023.\\
-This version: 17 February 2023.}
+This version: 14 March 2023.}
 
 \begin{document}
 \maketitle
@@ -133,7 +133,7 @@ This paper provides a detailed walkthrough of how we validated the
 estimations of the wru package (R) with the publicly available voter
 file in North Carolina. After cleaning the dataset in a way to meet the
 standards of wru, we ran the predict race function using the most
-recently available 2020 data at the county level. Mutliple estimates
+recently available 2020 data at the county level. Multiple estimates
 were calculated using a combination of the first, middle, and surname
 dictionaries. These various predictions are then compared to illustrate
 how utilizing all three of these names, even at the county level, can
@@ -175,14 +175,14 @@ Tidyverse includes a host of different packages commonly used for data
 management and cleaning. This project relies on dplyr to create the
 dataset of interest. Data.table is a package that allows R to import
 large datasets more efficiently, specifically for text files, through
-the used of the fread command. Finally, we utilize the wru package to
+the use of the fread command. Finally, we utilize the wru package to
 estimate the race/ethnicity of the various individuals within the
 dataset.
 
 \hypertarget{creating-the-dataset}{%
 \section{Creating the Dataset}\label{creating-the-dataset}}
 
-We begin be using the fread fucntion of the data.table package to import
+We begin using the fread function of the data.table package to import
 the statewide voter file from North Carolina. Fread presents a viable
 alternative to other methods of importing text files due to the size of
 the file (approximately 5 million observations).
@@ -200,7 +200,7 @@ the file (approximately 5 million observations).
 \end{Highlighting}
 \end{Shaded}
 
-After successfully bringing in this file and naming it ``Undecleared'',
+After successfully bringing in this file and naming it ``Undeclared'',
 we then bring in the county-level FIPS information, which will be
 important for acquiring the census information later. After creating a
 FIPS variable that has the mandatory three spaces for the values, the
@@ -240,7 +240,7 @@ more informative purposes, however, we go through and explain the code
 in segments.
 
 The row beginning with the filter command removes any row where the
-precinct\_desc variable possess either an NA or a empty string value.
+precinct\_desc variable possesses either an NA or an empty string value.
 This allows us to remove any observation (registrant) who is not
 registered in a recognized district in North Carolina. The mutate
 command provides the ability to create several new variables, including:
@@ -365,7 +365,7 @@ This will provide us with the following predictions:
 ``race/ethnicity''}\label{translating-the-predictions-into-an-individuals-raceethnicity}}
 
 While the previous command provides researchers with the predicted
-probability of an individuals' race/ethnicity across five categories,
+probability of an individual's race/ethnicity across five categories,
 the question now becomes what to do with this information? Put another
 way, how do we take this information and assign a new predicted value of
 race/ethnicity? We answer this with the following code:
@@ -490,6 +490,6 @@ Blacks/African Americans perform the worst. While this bias is reduced
 as we utilize more information in the prediction, and the overall
 accuracy of the model is something that provides promise for research,
 this underestimation of minority groups proposes a significant drawback,
-particular for community research.
+particularly for community research.
 
 \end{document}
