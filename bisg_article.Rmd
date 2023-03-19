@@ -1,14 +1,10 @@
 ---
-title: "On imputing Race/Ethnicity - Opportunity and implications to community research"
+title: "On imputing Race/Ethnicity with Bayesian Improved Surname Geocoding - Opportunity and implications to community research"
 author:
 - Kailas Venkitasubramanian, Charlotte Urban Institute
 - Eric Moore, Charlotte Urban Institute
 date: "2023-02-14"
-output:
-  html_document:
-    theme: journal
-  word_document: default
-  pdf_document: default
+output: rmdformats::downcute
 #knit: (function(inputFile, encoding) {
 #  rmarkdown::render(inputFile, encoding = encoding, output_dir = "docs") })
 ---
@@ -19,75 +15,62 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ![Photo: Bakken Museum](images/photobybakkenmuseum.jpg)
 
-## Why impute race/ethnicity ?
+## Why impute race/ethnicity data?
 
-Real-world data being messy and incomplete is more of a rule than exception. Non-existent, unreliable or incomplete race/ethnicity data can be detrimental to insights drawn from community research and policies that are informed by research. 
+Real-world data being messy and incomplete is more of a rule than exception. Non-existent, unreliable or incomplete race/ethnicity data can be detrimental to insights drawn from community research and policies that are informed by research.
 
-For example, if outcomes of a program to address health disparities among Hispanic/Latino people in Mecklenburg county was evaluated using a mix of survey or administrative data, and the self-reported race/ethnicity responses in this dataset were largely missing or of poor quality, conclusions drawn from the analyses about the success of this program can be circumspect or unusable. High quality race/ethnicity data is important to accurately represent the demographic characteristics of communities, identify and address disparities, center equity and make research inclusive and sensitive to a diverse population. 
+For example, if outcomes of a program to address health disparities among Hispanic/Latino people in Mecklenburg county was evaluated using a mix of survey or administrative data, and the self-reported race/ethnicity responses in this dataset were largely missing or of poor quality, conclusions drawn from the analyses about the success of this program can be circumspect or unusable. High quality race/ethnicity data is important to accurately represent the demographic characteristics of communities, identify and address disparities, center equity and make research inclusive and sensitive to a diverse population.
 
-Imputation is an important technique in social science research to address missing data issues. However, traditional imputation methods require at least part of the data to be non-missing in order to guess missing values and there are several data assumptions and statistical issues to overcome before making reliable imputed values. 
+Imputation is an important technique in social science research to address missing data issues. However, traditional imputation methods require at least part of the data to be non-missing in order to guess missing values. When race/ethnicity data is unavailable either due to restrictions in the source data system, or inability to record data at the time of collection, it is impossible to use traditional imputation methods to recover race/ethnicity data. Thus the value and utility of Bayesian improved surname geocoding.
 
-test test
+## What is Bayesian improved surname geocoding?
 
-Studies with unreliable or missing race/ethnicity data
+Bayesian Improved Surname Geocoding (BISG), originally developed by the [RAND Corporation](https://www.rand.org/pubs/periodicals/health-quarterly/issues/v6/n1/16.html), is a probabilistic algorithm to estimate the race/ethnicity of an individual based on their surname and the racial/ethnic composition of the geographic area where they reside.
 
-Augmenting Data Integration Process
+BISG calculates the probability that an individual belongs to a particular racial group based on their name and geolocation using the US Census Bureau's Surname list and demographic data of their area (county, tracts, block groups, blocks etc.). BISG gets us a set of probabilities that quantify whether a given person with missing race data is White, Black, Hispanic, Asian, or Other.
 
-Reusing data for [secondary research](https://en.wikipedia.org/wiki/Secondary_research)
+For example, if your last name is 'Walker' and you live in a neighborhood that is around 80% White, the BISG algorithm will place a high probability that you are White. Similarly, if your surname is Martinez and you live in Hispanic dominated census tract, the imputation will guess that you are more likely to be Hispanic. Please refer to [our technical article] for a primer on implementing BISG during data analysis.
 
+Several studies that have applied BISG or [validated BISG-derived estimates](https://pubmed.ncbi.nlm.nih.gov/23855558/) indicate a high level of accuracy of the algorithm in imputing racial/ethnic composition. The algorithm thus presents both opportunities and challenges for the institute's work, and in general community research.
 
+## How the Urban Institute uses BISG
 
+The Urban Institute often works with survey data and other microdata that include participants' names. Also, program/policy evaluations usually leverage secondary data collected by the program's administration also include participant surnames and location. BISG allows recovery of race/ethnicity data when none is available or when the collected race/ethnicity data is known to be unreliable.
 
-## Introducing Bayesian improved surname geocoding
+Secondly, the [Charlotte Regional Data Trust](https://ui.charlotte.edu/our-work/charlotte-regional-data-trust) integrates several administrative datasets for research. Our data science team's work on improving record linkage algorithms suggest that race/ethnicity data helps identify people across different agency databases with greater accuracy. BISG therefore can augment our effort to leverage linked administrative data to address important community research questions.
 
-Bayesian Improved Surname Geocoding (BISG) is a method used to impute race/ethnicity based on surname and geographic location data. BISG uses a probabilistic algorithm to estimate the race/ethnicity of an individual based on their surname and the racial/ethnic composition of the geographic area where they reside. 
+[citations] BISG remains a relatively new technique in social science research, with [Imai and Khanna (2016)](https://www.cambridge.org/core/journals/political-analysis/article/abs/improving-ecological-inference-by-predicting-individual-ethnicity-from-voter-registration-records/9DC8EBA269C25B1C606040196A3CB779) publishing their approach to using Bayes rule with the Census surname list less than a decade ago. Yet, this method has been used to answer diverse research questions that include comparing political behavior and participation, understanding disparities in housing evictions, estimating the risk of police use of force, assessing inequalities in flood vulnerability, addressing racial discrimination in lending practices, social determinants of health and others [give more examples]
 
+As our work continues to touch similarly diverse domains in the Charlotte region, the ability of BISG to remediate or improve data quality issues on race and ethnicity allows the institute's practice to bring an equity lens to research projects that otherwise may be stifled due to lack of critical data. But our explorations so far also raise concerns and pointers in how BISG method may be used in community research.
 
-### How BISG Works
+## Concerns and Practice Considerations
 
-(Eric)
+### Accuracy
 
-(Connect to WRU White paper and detailed technical piece)
+BISG implictly assumes that surnames are a reliable indicator of person's race/ethnicity and geographic distribution of surnames remain stable over time. Surnames can be influenced by cultural and historical factors such as immigration, adoption, and intermarriage. Rapidly growing or declining areas may witness significant changes in their race/ethnicity composition thus may affect BISG's accuracy. Studies have shown that BISG can achieve high accuracy rates for some racial/ethnic groups, such as non-Hispanic whites and non-Hispanic blacks. However, accuracy rates may be lower for other groups, such as Hispanic/Latino individuals or those with multiracial backgrounds.
 
-Caveats
+### Data quality
 
-surnames are not a foolproof indicator of race/ethnicity and can be influenced by cultural and historical factors such as immigration, adoption, and intermarriage.
+BISG relies on accurate and reliable data sources, such as census data or administrative records, to estimate the race/ethnicity of individuals. The quality of these data sources can vary, and errors or inconsistencies can affect the accuracy of BISG estimates. BISG is also often used to estimate race/ethnicity at the neighborhood or census block level, which can result in small sample sizes and increased uncertainty in the estimates.
 
-Studies have shown that BISG can achieve high accuracy rates for some racial/ethnic groups, such as non-Hispanic whites and non-Hispanic blacks. However, accuracy rates may be lower for other groups, such as Hispanic/Latino individuals or those with multiracial backgrounds. In addition, BISG may not accurately capture the diversity and complexity within and across racial/ethnic groups.
+### Data Privacy 
 
-should be used in combination with other data sources and approaches, and its results should be interpreted with caution and sensitivity.
+BISG relies on publicly available data sources, which can raise privacy concerns if the data are linked to identifiable individuals. Individuals could be re-identified based on BISG estimates if the data are not properly anonymized. This risk is higher when BISG estimates are combined with other sources of data that could be used to identify individuals, such as medical records or social media profiles.
 
-## Applications of BISG
+### Fairness and Non-discrimination
 
-(Eric)
+BISG estimates can be used to stigmatize or discriminate against certain groups if they are presented in a way that reinforces negative stereotypes or assumptions about those groups. BISG estimates are based on probabilities and can be used to group individuals into racial or ethnic categories. It is important to ensure that BISG is used in a way that promotes fairness and non-discrimination.
 
-(Examples of applications and notes on impact)
+### Informed consent 
 
+Informed consent is an ethical principle that requires researchers to obtain the voluntary and informed consent of study participants before collecting data or conducting research. BISG relies on publicly available data sources, such as census data or voter registration records, which may not have been collected specifically for research purposes. It is important to consider whether informed consent was obtained from individuals whose data are being used for BISG and to ensure that the data are being used in a way that respects their privacy and autonomy.
 
-## Concerns and Practice Considerations 
+### Rare populations and groups
 
-Privacy Policy of Client/Partner Organization
+BISG relies on surname information to estimate race and ethnicity, which may not be accurate for rare populations or groups. Some examples of rare populations or groups include immigrants, refugees, or indigenous populations. BISG estimates may be less accurate for rare populations or groups, which may lead to inaccurate conclusions or unfair comparisons.
 
-Informed Consent
+## Conclusion
 
-Rare populations and Groups
+Based on the scientific evidence and applications of BISG in the last decade, our work sees value and benefits of using this tool in community research especially in racially diverse region like Charlotte. In addition to addressing the concerns above, work remains to be done to assess neighborhood level performance of BISG in estimating racial/ethnic composition to ensure high quality reporting using imputed data. But as our exploration progresses, we see engagement with partners and the community as a critical prerequisite to applying BISG to community research projects. Conducting research in a respectful and culturally sensitive manner remains a cornerstone of the institute's research practice even as rapid technology advances in data science continue to empower our work in the region.
 
-Choosing when to collect race data
-
-Reporting imputation and constraints
-
-Collecting name and address information
-
-Reidentification Risks
-
-## Next Steps 
-
-
-Formalizing the practice 
-
-Documentation and Resources
-
-Community and partner feedback
-
-
-
+## More Resources

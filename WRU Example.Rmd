@@ -24,6 +24,40 @@ library(readxl)
 library(tidyr)
 library(data.table)
 library(wru)
+library(gt)
+library(webshot2)
+library(pdftools)
+
+# Function
+`%ni%` <- Negate(`%in%`)
+
+apa_style <- function(data) {
+  data %>%
+    opt_table_lines(extent = "none") %>%
+    tab_options(
+      table.align = "left",
+      heading.border.bottom.width = 2,
+      heading.border.bottom.color = "black",
+      heading.border.bottom.style = "solid",
+      table.border.top.color = "white",
+      table_body.hlines.color = "white",
+      table_body.border.top.color = "black",
+      table_body.border.top.style = "solid",
+      table_body.border.top.width = 1,
+      heading.title.font.size = 16,
+      table.font.size = 13,
+      heading.subtitle.font.size = 14,
+      heading.align = "left",
+      table_body.border.bottom.color = "black",
+      table_body.border.bottom.width = 2,
+      table_body.border.bottom.style = "solid",
+      column_labels.border.bottom.color = "black",
+      column_labels.border.bottom.style = "solid",
+      column_labels.border.bottom.width = 1,
+      data_row.padding = px(5)
+    ) %>%
+      opt_table_font(font = "georgia")
+}
 ```
 
 ## Importing and Shaping the Data
@@ -128,7 +162,7 @@ gc()
 
 
 check <- table(Undeclared$Race_sur) 
-check / sum(check) 
+check / sum(check) # 0.7592223
 rm(check)
 ```
 
@@ -181,7 +215,7 @@ gc()
 
 
 check <- table(Undeclared$Race_sfirst) 
-check / sum(check) 
+check / sum(check) # 0.8301445
 rm(check)
 ```
 
@@ -233,7 +267,7 @@ gc()
 
 
 check <- table(Undeclared$Race_sfm)
-check / sum(check) 
+check / sum(check) # 0.8660749 
 rm(check)
 ```
 
@@ -241,7 +275,8 @@ rm(check)
 
 ## Validating BISG Predictions
 ```{r, eval=FALSE}
-Undeclared %>% group_by(state, nc_re) %>%
+Undeclared %>% filter(nc_re %ni% "O") %>%
+  group_by(state, nc_re) %>%
   summarise(Correct=sum(Race_sur, na.rm = T)) %>% 
   ungroup() %>% 
   left_join(Undeclared %>% group_by(state, nc_re) %>%
@@ -264,7 +299,24 @@ Undeclared %>% group_by(state, nc_re) %>%
               summarise(Total=n()) %>% 
               ungroup, by = c("state", "nc_re")) %>% 
               mutate(Prop2 = (Correct/Total) * 100,
-              Diff2 = Prop2 - 87) %>% dplyr::select(-c(Correct, Total))
+              Diff2 = Prop2 - 87) %>% dplyr::select(-c(state, Correct, Total)) %>% 
+  mutate(nc_re = recode(nc_re, A = "Asian", B = "Black/AA", HL = "Hispanic", W = "White")) %>%
+  gt() %>% apa_style %>%
+  tab_header(title = "Comparing the Accuracy of Multiple BISG Predictions") %>%
+    cols_label(
+    nc_re = "Race",
+    Prop = "Correct", Diff = "Difference",
+    Prop1 = "Correct", Diff1 = "Difference",
+    Prop2 = "Correct", Diff2 = "Difference") %>%
+    fmt_number(columns = c("Prop", "Prop1","Prop2",
+                           "Diff", "Diff1", "Diff2"), decimals = 2) %>%
+    tab_spanner(label = "Surname",columns = c(2:3)) %>%
+    tab_spanner(label = "Sur + First",columns = c(4:5)) %>%
+    tab_spanner(label = "Sur + F + Middle",columns = c(6:7)) %>%
+  cols_align(align = c("center"), columns = c(2:7)) %>%
+  gtsave("tab1.pdf")
+
 ```
+
 
 
