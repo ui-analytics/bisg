@@ -21,9 +21,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Why impute race/ethnicity ?
 
-Real-world data being messy and incomplete is more of a rule than exception. Non-existent, unreliable or incomplete race/ethnicity data can be especially detrimental to insights drawn from community research and policies that are informed by this research. For example, if outcomes of a program to address health disparities among Hispanic/Latino people in Mecklenburg county was evaluated using a mix of survey or administrative data, and the self-reported race/ethnicity responses in this datasets were largely missing or of poor quality, conclusions drawn from the analysis about the success of this program can be circumspect or unusable. High quality race/ethnicity data is important to accurately represent the demographic characteristics of communities, identify and address disparities, promote and center equity and make research inclusive and sensitive to a diverse population. 
+Real-world data being messy and incomplete is more of a rule than exception. Non-existent, unreliable or incomplete race/ethnicity data can be detrimental to insights drawn from community research and policies that are informed by research. 
 
-Imputation is an important technique in social science research to address missing data. 
+For example, if outcomes of a program to address health disparities among Hispanic/Latino people in Mecklenburg county was evaluated using a mix of survey or administrative data, and the self-reported race/ethnicity responses in this dataset were largely missing or of poor quality, conclusions drawn from the analyses about the success of this program can be circumspect or unusable. High quality race/ethnicity data is important to accurately represent the demographic characteristics of communities, identify and address disparities, center equity and make research inclusive and sensitive to a diverse population. 
+
+Imputation is an important technique in social science research to address missing data issues. However, traditional imputation methods require at least part of the data to be non-missing in order to guess missing values and there are several data assumptions and statistical issues to overcome before making reliable imputed values. 
 
 test test
 
