@@ -4,7 +4,9 @@ author:
 - Kailas Venkitasubramanian, Charlotte Urban Institute
 - Eric Moore, Charlotte Urban Institute
 date: "2023-02-14"
-output: rmdformats::downcute
+output: word_document
+        #rmdformats::downcute
+      
 #knit: (function(inputFile, encoding) {
 #  rmarkdown::render(inputFile, encoding = encoding, output_dir = "docs") })
 bibliography: references.yaml
