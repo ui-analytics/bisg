@@ -4,8 +4,8 @@ subtitle: |
     | Description of using the WRU package to Estimate Missing Data
 
 author: | 
-    | Eric Moore, Ph.D
-    | Kailas Venkitasubramanian, Ph.D
+    | Eric Moore, Ph.D , UNC Charlotte Urban Institute
+    | Kailas Venkitasubramanian, Ph.D , UNC Charlotte Urban Institute
     
 output: 
   html_document: rmdformats::downcute
